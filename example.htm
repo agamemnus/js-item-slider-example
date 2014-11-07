@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <style type="text/css">
+.selector {
+ padding     : 5px;
+ white-space : nowrap;
+ display     : inline-block;
+}
+.selector > * {
+ vertical-align : middle;
+}
+.selector-prev, .selector-next {
+ position : relative;
+ display  : inline-block;
+}
+.selector-item_viewport {
+ position      : relative;
+ overflow      : hidden;
+ display       : inline-block;
+}
+.selector-item_wrapper_outer, .selector-item_wrapper {
+ position    : relative;
+ overflow    : hidden;
+ white-space : nowrap;
+ display     : inline-block;
+}
+.selector-item {
+ position    : relative;
+ width       : 24px;
+ height      : 24px;
+ line-height : 24px;
+ display     : inline-block;
+}
+
+/* <Visual styling.> */
+.selector-item, .selector {
+  border: 1px solid black;
+}
+.selector-item_viewport {
+ margin-top    : 1px;
+ margin-bottom : 1px;
+ line-height   : 0;
+}
+.selector-wrapper {border-color: blue}
+.selector-item {
+ margin-right   : 3px;
+ margin-left    : 3px;
+ border-color   : grey;
+ text-align     : center;
+ vertical-align : middle;
+}
+/* </Visual styling.> */
+  </style>
+  <script type text="javascript">
+window.addEventListener ('onload', run_it)
+
+function run_it () {
+ var wrapper_outer = document.querySelector ('.selector > .selector-item_viewport > .selector-item_wrapper_outer')
+ var wrapper = document.querySelector ('.selector > .selector-item_viewport > .selector-item_wrapper_outer > .selector-item_wrapper')
+ var visible_amount = 8
+ var visible_amount_plus_buffer = visible_amount + 2
+ var leftmost_item = 5
+ 
+ var buffer = []
+ 
+ var current_movement_timeout = undefined
+ 
+ Array.prototype.slice.call(wrapper.children).forEach (function (child) {buffer.push (child)})
+ 
+ function show_visible_items () {
+  wrapper.innerHTML = ""
+  var buffer_length = buffer.length
+  for (var i = 0; i < visible_amount_plus_buffer; i++) {
+   wrapper.appendChild (buffer[(i + leftmost_item + buffer_length) % buffer_length])
+  }
+ }
+ 
+ function normalize_margin () {
+  var buffer_length = buffer.length
+  leftmost_item = leftmost_item + (buffer_length - Math.floor((parseFloat (wrapper.style.marginLeft)) / item_size)) % buffer_length
+  wrapper.style.marginLeft  = 0
+  wrapper.style.marginRight = 0
+ }
+ 
+ var item_size = function () {
+  var first_child = wrapper.children[0]
+  return first_child.getBoundingClientRect().width +
+  parseFloat(window.getComputedStyle(first_child).marginLeft) +
+  parseFloat(window.getComputedStyle(first_child).marginRight)
+ } ()
+ 
+ show_visible_items ()
+ 
+ wrapper.style.marginLeft  = 0
+ wrapper.style.marginRight = 0
+ wrapper_outer.style.marginLeft  = -item_size + "px"
+ wrapper_outer.style.marginRight = -item_size + "px"
+ 
+ var prev_button = document.querySelector ('.selector > .selector-prev')
+ prev_button.addEventListener ('click', function () {move_slider (-item_size, .05, 8)})
+ var next_button = document.querySelector ('.selector > .selector-next')
+ next_button.addEventListener ('click', function () {move_slider (item_size, .05, 8)})
+ 
+ function move_slider (pixel_total_amount, duration, frame_count) {
+  var pixel_move_amount = pixel_total_amount / frame_count
+  var current_frame = frame_count
+  // Clear any other movement timeouts.
+  if (typeof current_movement_timeout != "undefined") clearTimeout (current_movement_timeout)
+  move_once ()
+  function move_once () {
+   current_frame -= 1
+   var new_margin = (parseFloat(wrapper.style.marginLeft) + pixel_move_amount)
+   wrapper.style.marginLeft  =  new_margin + 'px'
+   wrapper.style.marginRight = -new_margin + 'px'
+   if (current_frame == 0) {
+    current_movement_timeout = undefined
+    normalize_margin ()
+    show_visible_items ()
+    return
+   }
+   current_movement_timeout = setTimeout (move_once, duration * 1000)
+  }
+ }
+}
+  </script>
+ </head>
+ <body>
+  <div class="selector">
+   <button class="selector-prev">Prev</button>
+   <div class="selector-item_viewport">
+   <div class="selector-item_wrapper_outer">
+    <div class="selector-item_wrapper">
+     <div class="selector-item">0</div>
+     <div class="selector-item">1</div>
+     <div class="selector-item">2</div>
+     <div class="selector-item">3</div>
+     <div class="selector-item">4</div>
+     <div class="selector-item">5</div>
+     <div class="selector-item">6</div>
+     <div class="selector-item">7</div>
+     <div class="selector-item">8</div>
+     <div class="selector-item">9</div>
+     </div>
+    </div>
+   </div>
+   <button class="selector-next">Next</button>
+  </div>
+ </body>
+</html>
