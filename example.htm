@@ -76,11 +76,14 @@ function run_it () {
   }
  }
  
- function normalize_margin () {
-  var buffer_length = buffer.length
-  leftmost_item = leftmost_item + (buffer_length - Math.floor((parseFloat (wrapper.style.marginLeft)) / item_size)) % buffer_length
+ function normalize_margin (movement_direction) {
+  leftmost_item = calculate_closest_leftmost_item (movement_direction)
   wrapper.style.marginLeft  = 0
   wrapper.style.marginRight = 0
+ }
+ 
+ function calculate_closest_leftmost_item (movement_direction) {
+  return leftmost_item + (buffer.length + movement_direction - Math[movement_direction == 1 ? "ceil" : "floor"]((parseFloat(wrapper.style.marginLeft)) / item_size)) % buffer.length
  }
  
  var item_size = function () {
@@ -98,32 +101,39 @@ function run_it () {
  wrapper_outer.style.marginRight = -item_size + "px"
  
  var prev_button = document.querySelector ('.selector > .selector-prev')
- prev_button.addEventListener ('click', function () {move_slider (-item_size, .05, 8)})
+ prev_button.addEventListener ('click', function () {move_slider (-item_size * 1.4, .05, 8)})
  var next_button = document.querySelector ('.selector > .selector-next')
- next_button.addEventListener ('click', function () {move_slider (item_size, .05, 8)})
+ next_button.addEventListener ('click', function () {move_slider (item_size * 1.4, .05, 8)})
  
  function move_slider (pixel_total_amount, duration, frame_count) {
+  var movement_direction = (pixel_total_amount > 0) ? 1 : -1
   var pixel_move_amount = pixel_total_amount / frame_count
-  var current_frame = frame_count
+  var current_frame = frame_count 
+ 
   // Clear any other movement timeouts.
-  if (typeof current_movement_timeout != "undefined") clearTimeout (current_movement_timeout)
+  if (typeof current_movement_timeout != "undefined") {
+   clearTimeout (current_movement_timeout)     
+   current_movement_timeout = undefined
+  }
+  
   move_once ()
+  
   function move_once () {
    current_frame -= 1
    var new_margin = (parseFloat(wrapper.style.marginLeft) + pixel_move_amount)
    wrapper.style.marginLeft  =  new_margin + 'px'
    wrapper.style.marginRight = -new_margin + 'px'
-   if (current_frame == 0) {
+   var closest_leftmost_item = calculate_closest_leftmost_item (movement_direction)
+   if ((current_frame == 0) || (leftmost_item != closest_leftmost_item)) {
     current_movement_timeout = undefined
-    normalize_margin ()
+    normalize_margin (movement_direction)
     show_visible_items ()
     return
    }
    current_movement_timeout = setTimeout (move_once, duration * 1000)
   }
  }
-}
-  </script>
+</script>
  </head>
  <body>
   <div class="selector">
